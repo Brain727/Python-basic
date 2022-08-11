@@ -1,58 +1,54 @@
+import telebot
+from telebot import types # клавиатура
 import random
-botrandom = ["камень", "ножницы", "бумага"]
-botwin = 0
-userwin = 0
-print("Сыграем в игру Камень-Ножницы-Бумага")
-n = int(input("Введите количсетво раундов: "))
 
-for i in range(n):
-    botin = random.choice(botrandom)
-    userin = ""
-    while userin != "камень" and userin != "ножницы" and userin != "бумага":
-        userin = input("Введите к(камень)-н(ножницы)-б(бумага)").lower()
-        if userin == "к":
-            userin = "камень"
-        elif userin == "н":
-            userin = "ножницы"
-        elif userin == "б":
-            userin = "бумага"
-        else:
-            print("Неправильный ввод!")
+token = "1778106641:AAGBBRBdYa1akx9xjubQQN_BEbnGTHqx9os"
 
-    if userin == "камень" and botin == "камень":
-        print("Вы выбрали ", userin, ",а компьютер выбрал ",botin, " НИЧЬЯ!")
-    elif userin == "камень" and botin == "ножницы":
-        print("Вы выбрали ", userin, ",а компьютер выбрал ",botin, " ВЫ ПОБЕДИЛИ!")
-        userwin +=1
-    elif userin == "камень" and botin == "бумага":
-        print("Вы выбрали ", userin, ",а компьютер выбрал ",botin, " ВЫ ПРОИГРАЛИ!")
-        botwin +=1
-
-    elif userin == "ножницы" and botin == "камень":
-        print("Вы выбрали ", userin, ",а компьютер выбрал ", botin, " ВЫ ПРОИГРАЛИ!")
-        botwin += 1
-    elif userin == "ножницы" and botin == "ножницы":
-        print("Вы выбрали ", userin, ",а компьютер выбрал ", botin, " НИЧЬЯ!")
-    elif userin == "ножницы" and botin == "бумага":
-        print("Вы выбрали ", userin, ",а компьютер выбрал ", botin, " ВЫ ПОБЕДИЛИ!")
-        userwin += 1
-
-    elif userin == "бумага" and botin == "камень":
-        print("Вы выбрали ", userin, ",а компьютер выбрал ", botin, " ВЫ ПОБЕДИЛИ!")
-        userwin += 1
-    elif userin == "бумага" and botin == "ножницы":
-        print("Вы выбрали ", userin, ",а компьютер выбрал ", botin, " ВЫ ПРОИГРАЛИ!")
-        botwin += 1
-    elif userin == "бумага" and botin == "бумага":
-        print("Вы выбрали ", userin, ",а компьютер выбрал ", botin, " НИЧЬЯ!")
-
-print("-"*10)
-print("Игра окончена! Общий счет- ", userwin, ":", botwin)
-if userwin == botwin:
-    print("НИЧЬЯ!")
-elif userwin > botwin:
-    print("ВЫ ПОБЕДИЛИ!")
-elif userwin < botwin:
-    print("ВЫ ПРОИГРАЛИ!")
+bot = telebot.TeleBot(token)
 
 
+@bot.message_handler(commands=['start'])
+def game_start(message):
+    # Открываем файл для записи
+    file = open('RPC_log.txt', 'w')
+    # Записываем
+    file.write("\nUser id: {}".format(message.from_user.id))
+    # Закрываем файл
+    file.close()
+    # Создаем клавиатуру
+    bot.send_message(message.chat.id, "Игра 'Камень, Ножницы, Бумага' начинается!")
+    bot.send_message(message.chat.id, "Сделай свой выбор: ")
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = types.KeyboardButton('Камень🤜')
+    btn2 = types.KeyboardButton('Ножницы✌️')
+    btn3 = types.KeyboardButton('Бумага✋')
+    keyboard.add(btn1, btn2, btn3)
+    bot.send_message(message.chat.id, 'Камень🤜, ножницы✌️, бумага✋, раз, два, три! Выбирай сердцем:',
+                     reply_markup=keyboard)
+
+
+@bot.message_handler(content_types=['text'])
+def game(message):
+    botin = random.choice(['Камень🤜', 'Ножницы✌️', 'Бумага✋'])
+    if message.text == botin:
+        bot.send_message(message.chat.id, "Мы оба выбрали {}. НИЧЬЯ!".format(botin))
+        bot.send_message(message.chat.id, 'Для начала новой игры пишите или нажмите /start')
+    else:
+        if message.text == 'Камень🤜':
+            if botin == 'Ножницы✌️':
+                bot.send_message(message.chat.id, 'Поздравляю с победой! У меня была {}. Для начала новой игры пишите или нажмите /start'.format(botin))
+            else:
+                bot.send_message(message.chat.id, 'Извините, но Вы проиграли 😢. У меня был(и/a) {}. Для начала новой игры пишите или нажмите /start'.format(botin))
+        elif message.text == 'Ножницы✌️':
+            if botin == 'Бумага✋':
+                bot.send_message(message.chat.id, 'Поздравляю с победой! У меня была {}. Для начала новой игры пишите /start'.format(botin))
+            else:
+                bot.send_message(message.chat.id, 'Извините, но Вы проиграли 😢. У меня был(и/a) {}. Для начала новой игры пишите /start'.format(botin))
+        elif message.text == 'Бумага✋':
+            if botin == 'Камень🤜':
+                bot.send_message(message.chat.id, 'Поздравляю с победой! У меня была {}. Для начала новой игры пишите /start'.format(botin))
+            else:
+                bot.send_message(message.chat.id, 'Извините, но Вы проиграли 😢. У меня был(и/a) {}. Для начала новой игры пишите /start'.format(botin))
+
+
+bot.polling(none_stop=True)  #постоянно обращается к серверам телеграм
